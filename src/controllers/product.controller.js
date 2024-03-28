@@ -11,6 +11,21 @@ class ProductController {
     }).send(res)
   }
 
+  //path
+  updateProduct = async (req, res, next) => {
+    new OK({
+      message: 'Update product success.',
+      metadata: await productService.updateProduct(
+        req.body.product_type,
+        req.params.product_id,
+        {
+          ...req.body,
+          product_shop: req.user.userId
+        }
+      )
+    }).send(res)
+  }
+
   publishProductByShop = async (req, res, next) => {
     new OK({
       message: 'Publish product success.',
@@ -54,6 +69,22 @@ class ProductController {
     new OK({
       message: 'Get List search product success.',
       metadata: await productService.searchProducts(req.params)
+    }).send(res)
+  }
+
+  getAllProducts = async (req, res, next) => {
+    new OK({
+      message: 'Get List product success.',
+      metadata: await productService.getAllProducts(req.params)
+    }).send(res)
+  }
+
+  getProduct = async (req, res, next) => {
+    new OK({
+      message: 'Get product success.',
+      metadata: await productService.findProduct({
+        product_id: req.params.product_id
+      })
     }).send(res)
   }
 
