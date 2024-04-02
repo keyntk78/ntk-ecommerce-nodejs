@@ -25,14 +25,14 @@ app.use((req, res, next) => {
 
 app.use((error, req, res, next) => {
   const statusCode = error.status || 500
+  console.log('ee', error.message)
   res.status(statusCode).json({
     success: false,
     code: statusCode,
     langMessage: error.langMessage || null,
-    stack: error.stack || null,
+    //  stack: error.stack || null,
     message: error.message || 'Internal server error'
   })
-  next(error)
 })
 
 module.exports = app

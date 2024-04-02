@@ -5,7 +5,11 @@ const {
   furniture,
   electronics
 } = require('../product.model')
-const { getSelectData, unGetSelectData } = require('../../utils/objectUtils')
+const {
+  getSelectData,
+  unGetSelectData,
+  convertToObjectDbMongodb
+} = require('../../utils/objectUtils')
 
 const findAllDraftForShop = async ({ query, limit, skip }) => {
   return await queryProduct({ query, limit, skip })
@@ -105,6 +109,10 @@ const updateProductById = async ({
   return await model.findByIdAndUpdate(product_id, bodyUpdate, { new: isNew })
 }
 
+const getProductId = async (productId) => {
+  return await product.findOne({ _id: productId }).lean()
+}
+
 module.exports = {
   findAllDraftForShop,
   publishProductByShop,
@@ -113,5 +121,6 @@ module.exports = {
   searchProducts,
   findAllProducts,
   findProduct,
-  updateProductById
+  updateProductById,
+  getProductId
 }

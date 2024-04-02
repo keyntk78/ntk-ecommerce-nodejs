@@ -48,11 +48,12 @@ class DiscountService {
         message: 'Start date must be before end date'
       })
     }
+
     //create index for discount code
     const foundDiscount = await discountModel
       .findOne({
         discount_code: code,
-        discount_shopId: convertToObjectDbMongodb(shop_id)
+        discount_shopId: shop_id
       })
       .lean()
 
@@ -62,7 +63,7 @@ class DiscountService {
       })
     }
 
-    const newDiscount = new discountModel({
+    const newDiscount = await discountModel.create({
       discount_code: code,
       discount_name: name,
       discount_description: description,
@@ -86,17 +87,11 @@ class DiscountService {
   }
 
   //   Gell all discount codes available with product
-  static async getAllDiscountCodesWithProduct({
-    code,
-    shop_id,
-    user_id,
-    limit,
-    page
-  }) {
+  static async getAllDiscountCodesWithProduct({ code, shopId, limit, page }) {
     const foundDiscount = await discountModel
       .findOne({
         discount_code: code,
-        discount_shopId: convertToObjectDbMongodb(shop_id)
+        discount_shopId: shopId
       })
       .lean()
 
@@ -113,7 +108,7 @@ class DiscountService {
       //get all product
       products = await findAllProducts({
         filter: {
-          product_shop: convertToObjectDbMongodb(shop_id),
+          product_shop: shopId,
           isPublished: true
         },
         limit: +limit,
@@ -135,36 +130,39 @@ class DiscountService {
         select: ['product_name']
       })
     }
+
+    return products
   }
 
   //Get all discount code of shop
-  static async getAllDiscountCodesByShop({ limit, page, shop_id }) {
+  static async getAllDiscountCodesByShop({ limit, page, shopId }) {
     const discount = finalAllDiscountCodeUnSelect({
       limit: +limit,
       page: +page,
       filter: {
-        discount_shopId: convertToObjectDbMongodb(shop_id),
+        discount_shopId: shopId,
         discount_is_active: true
       },
       unSelect: ['_v', 'discount_shopId'],
-      model: discount
+      model: discountModel
     })
 
     return discount
   }
 
-  static async getDiscountAmount({ codeId, user_id, shop_id, products }) {
+  static async getDiscountAmount({ codeId, userId, shopId, products }) {
     const foundDiscount = await checkDiscountExist({
-      model: discount,
+      model: discountModel,
       filter: {
         discount_code: codeId,
-        discount_shopId: convertToObjectDbMongodb(shop_id)
+        discount_shopId: shopId
       }
     })
 
     if (!foundDiscount) {
       throw new BadRequestError({ message: 'Discount not existed!' })
     }
+
     const {
       discount_is_active,
       discount_max_uses,
@@ -193,13 +191,9 @@ class DiscountService {
     //check giá trị tối thiểu
     let totalOrder = 0
     if (discount_min_order_value > 0) {
-      totalOrder = products.reduce(
-        acc,
-        (product) => {
-          return acc + product.quantity * product.price
-        },
-        0
-      )
+      totalOrder = products.reduce((acc, product) => {
+        return acc + product.quantity * product.price
+      }, 0)
 
       if (totalOrder < discount_min_order_value) {
         throw new BadRequestError({
